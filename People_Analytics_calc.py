@@ -2,12 +2,11 @@
 # coding: utf-8
 
 # In[2]:
-
-
 import streamlit as st
 import pandas as pd
 import random
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Function to generate a random dataset
 def generate_random_data(num_records=100):
@@ -19,8 +18,8 @@ def generate_random_data(num_records=100):
     trainings = [random.choice(['Python', 'Data Science', 'Machine Learning', 'Leadership', 'Communication', 'None']) for _ in range(num_records)]
     skills = [random.sample(['Python', 'R', 'SQL', 'Excel', 'Tableau', 'Power BI', 'Leadership', 'Management', 'Communication'], random.randint(3, 6)) for _ in range(num_records)]
     market_skills = ['Python', 'Machine Learning', 'Data Science', 'Leadership']  # Skills in demand
-    
-        # Simulated market value and future company demand
+
+    # Simulated market value and future company demand
     future_market_value = [round(random.uniform(50, 150), 2) for _ in range(num_records)]  # Simulated value in currency units (e.g., K dollars)
     future_company = [random.choice(['Google', 'Amazon', 'Facebook', 'Microsoft', 'Apple', 'None']) for _ in range(num_records)]
     package_offer = [round(value * 1.2, 2) for value in future_market_value]  # 20% higher than current market value
@@ -40,30 +39,37 @@ def generate_random_data(num_records=100):
     
     return pd.DataFrame(data)
 
-
-# In[3]:
-
-
 # Generate the random dataset
 df = generate_random_data()
 
-
-# In[4]:
-
-
-df
-
-
-# In[5]:
-
-
 # Streamlit application
+st.set_page_config(page_title="People Analytics Tool", page_icon="📊", layout="wide", initial_sidebar_state="expanded")
+
+st.markdown(
+    """
+    <style>
+    .main {
+        background-color: #F0F2F6;
+    }
+    .sidebar .sidebar-content {
+        background-color: #D3E1F1;
+    }
+    h1, h2, h3, h4 {
+        color: #1A5276;
+    }
+    .stButton>button {
+        background-color: #1A5276;
+        color: white;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
 st.title("People Analytics Tool")
 
 # Input fields
-st.subheader("Enter Employee Details")
-input_name = st.text_input("Name")
-input_id = st.text_input("ID")
+st.sidebar.subheader("Enter Employee Details")
+input_name = st.sidebar.text_input("Name")
+input_id = st.sidebar.text_input("ID")
 
 # Filter data based on input
 if input_name and input_id:
@@ -78,12 +84,32 @@ if input_name and input_id:
         st.write(f"**Skills:** {', '.join(employee_data.iloc[0]['Skills'])}")
         
         # Determine skills in market demand
-        skills_in_demand = list(set(employee_data.iloc[0]['Skills']) & set(market_skills))
+        skills_in_demand = list(set(employee_data.iloc[0]['Skills']) & set(['Python', 'Machine Learning', 'Data Science', 'Leadership']))
         st.write(f"**Skills in Market Demand:** {', '.join(skills_in_demand) if skills_in_demand else 'None'}")
         
         st.write(f"**Future Market Value:** {employee_data.iloc[0]['Future_Market_Value (K)']}K")
         st.write(f"**Future Company Demand:** {employee_data.iloc[0]['Future_Company_Demand']}")
         st.write(f"**Suggested Package Offer:** {employee_data.iloc[0]['Suggested_Package_Offer (K)']}K")
+        
+        # Visualize salary hike trajectory
+        st.write("### Salary Hike Trajectory")
+        fig, ax = plt.subplots()
+        salary_hikes = np.cumsum(np.random.normal(1 + employee_data.iloc[0]['Last_Salary_Hike (%)']/100, 0.05, 10))
+        ax.plot(range(10), salary_hikes, color='#1A5276', marker='o', linestyle='-', linewidth=2)
+        ax.set_title('Salary Hike Trajectory Over Time')
+        ax.set_xlabel('Years')
+        ax.set_ylabel('Cumulative Salary Hike (%)')
+        st.pyplot(fig)
+
+        # Visualize future market value prediction
+        st.write("### Future Market Value Prediction")
+        fig, ax = plt.subplots()
+        market_values = employee_data.iloc[0]['Future_Market_Value (K)'] * (1 + np.random.normal(0.1, 0.03, 5))
+        ax.bar(range(5), market_values, color='#76D7C4')
+        ax.set_title('Projected Future Market Value')
+        ax.set_xlabel('Years Ahead')
+        ax.set_ylabel('Market Value (K)')
+        st.pyplot(fig)
+        
     else:
         st.write("No employee found with the given Name and ID.")
-
